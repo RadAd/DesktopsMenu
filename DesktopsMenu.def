@@ -1,0 +1,4 @@
+LIBRARY   DesktopsMenu
+EXPORTS
+   DesktopsMenuA   @1
+   DesktopsMenuW   @2
