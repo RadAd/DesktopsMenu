@@ -12,11 +12,11 @@ Adds items to the windows system menu for virtual desktops
 
 Build
 =======
-```
+```bat
 msbuild DesktopsMenu.vcxproj -p:Configuration=Release -p:Platform=x64
 ```
 Run
 =======
-```
+```bat
 rundll32 DesktopsMenu.dll,DesktopsMenu
 ```
