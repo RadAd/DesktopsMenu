@@ -161,17 +161,17 @@ LRESULT CALLBACK WndProc(const HWND hWnd, const UINT uMsg, const WPARAM wParam, 
 			case SC_PIN: return OnDesktopPin(ws, hWndSrc, ms->msg);
 			case SC_MOVE_PREV: return OnDesktopMove(ws, hWndSrc, ms->msg, GetDesktop(ws, LeftDirection));
 			case SC_MOVE_NEXT: return OnDesktopMove(ws, hWndSrc, ms->msg, GetDesktop(ws, RightDirection));
-			case SC_MOVE_DESKTOP + 0:
-			case SC_MOVE_DESKTOP + 1:
-			case SC_MOVE_DESKTOP + 2:
-			case SC_MOVE_DESKTOP + 3:
-			case SC_MOVE_DESKTOP + 4:
-			case SC_MOVE_DESKTOP + 5:
-			case SC_MOVE_DESKTOP + 6:
-			case SC_MOVE_DESKTOP + 7:
-			case SC_MOVE_DESKTOP + 8:
-			case SC_MOVE_DESKTOP + 9:
-				return OnDesktopMove(ws, hWndSrc, ms->msg, GetDesktop(ws, ms->type - SC_MOVE_DESKTOP));
+			case SC_MOVE_DESKTOP + 0x00:
+			case SC_MOVE_DESKTOP + 0x10:
+			case SC_MOVE_DESKTOP + 0x20:
+			case SC_MOVE_DESKTOP + 0x30:
+			case SC_MOVE_DESKTOP + 0x40:
+			case SC_MOVE_DESKTOP + 0x50:
+			case SC_MOVE_DESKTOP + 0x60:
+			case SC_MOVE_DESKTOP + 0x70:
+			case SC_MOVE_DESKTOP + 0x80:
+			case SC_MOVE_DESKTOP + 0x90:
+				return OnDesktopMove(ws, hWndSrc, ms->msg, GetDesktop(ws, (ms->type - SC_MOVE_DESKTOP) >> 4));
 			default: return FALSE;
 			}
 		}
@@ -181,8 +181,12 @@ LRESULT CALLBACK WndProc(const HWND hWnd, const UINT uMsg, const WPARAM wParam, 
 
 	case WM_GETTEXT:
 	{
+		int nSize = static_cast<int>(wParam);
 		const DesktopData* ws = (DesktopData*) GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		return GetDesktopNames(ws, (TCHAR*) lParam, static_cast<int>(wParam));
+		if (ws != nullptr && nSize == 1024)	// Size 1024 means it comes from HookProc
+			return GetDesktopNames(ws, (TCHAR*) lParam, nSize);
+		else
+			return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
 
 	case WM_COMMAND:

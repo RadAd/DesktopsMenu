@@ -33,5 +33,3 @@ void ReportError(LPCTSTR msg)
     OutputDebugString(buf);
 #endif
 }
-
-

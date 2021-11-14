@@ -69,11 +69,11 @@ void HookProc(const HWND hWnd, const UINT message, const WPARAM wParam, const LP
 				while (TCHAR* e = wcschr(n, _T('|')))
 				{
 					*e = _T('\0');
-					AppendMenu(hMenuMove, MF_STRING, SC_MOVE_DESKTOP + dn, n);
+					AppendMenu(hMenuMove, MF_STRING, SC_MOVE_DESKTOP + (dn << 4), n);
 					n = e + 1;
 					++dn;
 				}
-				AppendMenu(hMenuMove, MF_STRING, SC_MOVE_DESKTOP + dn, n);
+				AppendMenu(hMenuMove, MF_STRING, SC_MOVE_DESKTOP + (dn << 4), n);
 
 				InsertMenu(hMenuSystem, SC_CLOSE, MF_BYCOMMAND | MF_POPUP, (UINT_PTR) hMenuMove, _T("Move to Desktop"));
 
@@ -87,8 +87,8 @@ void HookProc(const HWND hWnd, const UINT message, const WPARAM wParam, const LP
 				CheckMenuItem(hMenuSystem, type, MF_BYCOMMAND | static_cast<UINT>(result & MF_CHECKED));
 			}
 			UINT radio = -1;
-			UINT max = SC_MOVE_DESKTOP + 9;
-			for (UINT type = SC_MOVE_DESKTOP + 0; type <= max; ++type)
+			UINT max = SC_MOVE_DESKTOP + 0x90;
+			for (UINT type = SC_MOVE_DESKTOP + 0; type <= max; type += 0x10)
 			{
 				const LRESULT result = SendDesktopMessage(hDesktopsWnd, hWnd, type, Message::Query);
 				if (EnableMenuItem(hMenuSystem, type, MF_BYCOMMAND | static_cast<UINT>(result & MF_DISABLED)) < 0)
@@ -106,21 +106,21 @@ void HookProc(const HWND hWnd, const UINT message, const WPARAM wParam, const LP
 	}
 
 	case WM_SYSCOMMAND:
-		switch ((UINT) wParam)
+		switch (((UINT) wParam & 0xFFF0))
 		{
 		case SC_PIN:
 		case SC_MOVE_PREV:
 		case SC_MOVE_NEXT:
-		case SC_MOVE_DESKTOP + 0:
-		case SC_MOVE_DESKTOP + 1:
-		case SC_MOVE_DESKTOP + 2:
-		case SC_MOVE_DESKTOP + 3:
-		case SC_MOVE_DESKTOP + 4:
-		case SC_MOVE_DESKTOP + 5:
-		case SC_MOVE_DESKTOP + 6:
-		case SC_MOVE_DESKTOP + 7:
-		case SC_MOVE_DESKTOP + 8:
-		case SC_MOVE_DESKTOP + 9:
+		case SC_MOVE_DESKTOP + 0x00:
+		case SC_MOVE_DESKTOP + 0x10:
+		case SC_MOVE_DESKTOP + 0x20:
+		case SC_MOVE_DESKTOP + 0x30:
+		case SC_MOVE_DESKTOP + 0x40:
+		case SC_MOVE_DESKTOP + 0x50:
+		case SC_MOVE_DESKTOP + 0x60:
+		case SC_MOVE_DESKTOP + 0x70:
+		case SC_MOVE_DESKTOP + 0x80:
+		case SC_MOVE_DESKTOP + 0x90:
 		{
 			const HWND hDesktopsWnd = FindWindow(g_lpstrClass, nullptr);
 			SendDesktopMessage(hDesktopsWnd, hWnd, (UINT) wParam, Message::Select);

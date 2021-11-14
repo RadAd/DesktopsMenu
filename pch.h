@@ -20,9 +20,9 @@ extern const LPCTSTR g_lpstrClass;
 #define CD_DESKTOPS							0x0100
 
 #define SC_PIN								0xF200
-#define SC_MOVE_PREV						0xF201
-#define SC_MOVE_NEXT						0xF202
-#define SC_MOVE_DESKTOP						0xF203
+#define SC_MOVE_PREV						0xF210
+#define SC_MOVE_NEXT						0xF220
+#define SC_MOVE_DESKTOP						0xF300
 
 enum class Message
 {
@@ -40,9 +40,9 @@ extern HWND g_hMsgWnd;
 
 void ReportError(LPCTSTR msg);
 
-#define CHECK_HR_MSG(x, msg) if (FAILED(x)) { ReportError(msg); return; }
+#define CHECK_HR_MSG(x, msg) if (FAILED(x)) { ReportError(_T("Check failed: ") msg); return; }
 #define CHECK_HR(x) CHECK_HR_MSG(x, _CRT_WIDE(#x))
-#define CHECK_HR_MSG_RET(x, msg, r) if (FAILED(x)) { ReportError(msg); return r; }
+#define CHECK_HR_MSG_RET(x, msg, r) if (FAILED(x)) { ReportError(_T("Check failed: ") msg); return r; }
 #define CHECK_HR_RET(x, r) CHECK_HR_MSG_RET(x, _CRT_WIDE(#x), r)
 #define CHECK_MSG(x, msg) if (!(x)) { ReportError(msg); return; }
 #define CHECK(x) CHECK_MSG(x, _CRT_WIDE(#x))
