@@ -6,6 +6,7 @@ Adds items to the windows system menu for virtual desktops
 
 ![Windows](https://img.shields.io/badge/platform-Windows-blue.svg)
 [![Releases](https://img.shields.io/github/release/RadAd/DesktopsMenu.svg)](https://github.com/RadAd/DesktopsMenu/releases/latest)
+[![commits-since](https://img.shields.io/github/commits-since/RadAd/DesktopsMenu/latest.svg)](commits/master)
 [![Build](https://img.shields.io/appveyor/ci/RadAd/DesktopsMenu.svg)](https://ci.appveyor.com/project/RadAd/DesktopsMenu)
 
 ![Screenshot](docs/screenshot.png)
