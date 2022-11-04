@@ -44,7 +44,7 @@ struct HookDeleter
 };
 typedef std::unique_ptr<HHOOK, HookDeleter> unique_hook_t;
 
-INT_PTR AboutDlg(const HWND hDlg, const UINT uMsg, const WPARAM wParam, const LPARAM lParam)
+INT_PTR CALLBACK AboutDlg(const HWND hDlg, const UINT uMsg, const WPARAM wParam, const LPARAM lParam)
 {
     switch (uMsg)
     {
