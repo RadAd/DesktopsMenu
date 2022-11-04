@@ -7,9 +7,9 @@
 
 struct DesktopData
 {
-	CComPtr<IVirtualDesktopManagerInternal> pVirtualDesktopManagerInternal;
-	CComPtr<IVirtualDesktopPinnedApps> pVirtualDesktopPinnedApps;
-	CComPtr<IApplicationViewCollection> pApplicationViewCollection;
+    CComPtr<IVirtualDesktopManagerInternal> pVirtualDesktopManagerInternal;
+    CComPtr<IVirtualDesktopPinnedApps> pVirtualDesktopPinnedApps;
+    CComPtr<IApplicationViewCollection> pApplicationViewCollection;
 };
 
 void Init(DesktopData& ws);

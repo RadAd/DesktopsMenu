@@ -26,14 +26,14 @@ extern const LPCTSTR g_lpstrClass;
 
 enum class Message
 {
-	Query,
-	Select,
+    Query,
+    Select,
 };
 
 struct MessageStruct
 {
-	UINT type;
-	Message msg;
+    UINT type;
+    Message msg;
 };
 
 extern HWND g_hMsgWnd;
