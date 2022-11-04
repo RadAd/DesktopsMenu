@@ -139,6 +139,25 @@ LRESULT OnDesktopMove(const DesktopData* ws, const HWND hWndSrc, const Message m
 	}
 }
 
+BOOL OnDesktopSwitch(const DesktopData* ws, CComPtr<IVirtualDesktop> pDesktop)
+{
+	const BOOL ret = FALSE;
+	try
+	{
+		if (!pDesktop)
+			return FALSE;
+
+		CHECK_HR_RET(ws->pVirtualDesktopManagerInternal->SwitchDesktop(pDesktop), ret);
+
+		return TRUE;
+	}
+	catch (...)
+	{
+		ReportError(_T("FAILED Exception"));
+		return ret;
+	}
+}
+
 int GetDesktopNames(const DesktopData* ws, LPTSTR text, const int size)
 {
 	text[0] = _T('\0');
@@ -170,4 +189,35 @@ int GetDesktopNames(const DesktopData* ws, LPTSTR text, const int size)
 		}
 	}
 	return (int) wcslen(text);
+}
+
+std::vector<std::wstring> GetDesktopNames(const DesktopData* ws)
+{
+	std::vector<std::wstring> names;
+	CComPtr<IObjectArray> pDesktopArray;
+	if (ws->pVirtualDesktopManagerInternal && SUCCEEDED(ws->pVirtualDesktopManagerInternal->GetDesktops(&pDesktopArray)))
+	{
+		int dn = 0;
+		for (CComPtr<IVirtualDesktop2> pDesktop : ObjectArrayRange<IVirtualDesktop2>(pDesktopArray))
+		{
+			++dn;
+
+			HSTRING s = NULL;
+			CHECK_HR_RET(pDesktop->GetName(&s), std::vector<std::wstring>());
+
+			if (s == nullptr)
+			{
+				wchar_t n[100];
+				swprintf(n, ARRAYSIZE(n), _T("Desktop %d"), dn);
+				names.push_back(n);
+			}
+			else
+			{
+				names.push_back(WindowsGetStringRawBuffer(s, nullptr));
+
+				WindowsDeleteString(s);
+			}
+		}
+	}
+	return names;
 }

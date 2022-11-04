@@ -1,37 +1,8 @@
 #include "pch.h"
 #include "Hooks.h"
 
-inline int GetMenuPos(_In_ const HMENU hMenu, _In_ const UINT id)
-{
-	for (int nPos = 0; nPos < GetMenuItemCount(hMenu); ++nPos)
-	{
-		if (GetMenuItemID(hMenu, nPos) == id)
-			return nPos;
-	}
-	return -1;
-}
-
-inline HWND GetRealParent(_In_ HWND hWnd)
-{
-	HWND hParent;
-
-	hParent = GetAncestor(hWnd, GA_PARENT);
-	if (!hParent || hParent == GetDesktopWindow())
-		return NULL;
-
-	return hParent;
-}
-
-inline BOOL IsKeyDown(_In_ const int nVirtKey)
-{
-	return GetKeyState(nVirtKey) & 0x8000;
-}
-
-inline bool IsTopLevelWindow(const HWND hWnd)
-{
-	DWORD style = (DWORD) GetWindowLongPtr(hWnd, GWL_STYLE);
-	return style & WS_CAPTION;
-}
+HMENU LoadPopupMenu(HINSTANCE hInstance, DWORD id);
+UINT MenuFindByCommand(HMENU hMenu, UINT id);
 
 LRESULT SendDesktopMessage(const HWND hDesktopsWnd, const HWND hWnd, const UINT type, const Message msg)
 {
@@ -52,8 +23,9 @@ void HookProc(const HWND hWnd, const UINT message, const WPARAM wParam, const LP
 		{
 			const HWND hDesktopsWnd = FindWindow(g_lpstrClass, nullptr);
 
-			if (GetMenuPos(hMenuSystem, SC_PIN) == -1)
+			if (MenuFindByCommand(hMenuSystem, SC_PIN) == -1)
 			{
+				// TODO Shell_MergeMenus shlobj_core.h
 				InsertMenu(hMenuSystem, SC_CLOSE, MF_BYCOMMAND | MF_STRING, SC_PIN, _T("Pin to All Desktops"));
 
 				const HMENU hMenuMove = CreateMenu();
@@ -61,7 +33,7 @@ void HookProc(const HWND hWnd, const UINT message, const WPARAM wParam, const LP
 				AppendMenu(hMenuMove, MF_STRING, SC_MOVE_NEXT, _T("Next"));
 
 				AppendMenu(hMenuMove, MF_SEPARATOR, 0, nullptr);
-				int dn = 0;
+				UINT dn = 0;
 				TCHAR names[1024] = _T("");
 				//GetWindowText(hDesktopsWnd, names, ARRAYSIZE(names));
 				SendMessage(hDesktopsWnd, WM_GETTEXT, ARRAYSIZE(names), (LPARAM) names);
@@ -69,11 +41,11 @@ void HookProc(const HWND hWnd, const UINT message, const WPARAM wParam, const LP
 				while (TCHAR* e = wcschr(n, _T('|')))
 				{
 					*e = _T('\0');
-					AppendMenu(hMenuMove, MF_STRING, SC_MOVE_DESKTOP + (dn << 4), n);
+					AppendMenu(hMenuMove, MF_STRING, SC_MOVE_DESKTOP + ((UINT_PTR) dn << 4), n);
 					n = e + 1;
 					++dn;
 				}
-				AppendMenu(hMenuMove, MF_STRING, SC_MOVE_DESKTOP + (dn << 4), n);
+				AppendMenu(hMenuMove, MF_STRING, SC_MOVE_DESKTOP + ((UINT_PTR) dn << 4), n);
 
 				InsertMenu(hMenuSystem, SC_CLOSE, MF_BYCOMMAND | MF_POPUP, (UINT_PTR) hMenuMove, _T("Move to Desktop"));
 

@@ -48,6 +48,6 @@ void ReportError(LPCTSTR msg);
 #define CHECK(x) CHECK_MSG(x, _CRT_WIDE(#x))
 // No return
 #define VALIDATE(x, msg) if (!(x)) { ReportError(msg); }
-#define VALIDATEE(x) VALIDATE(x, _CRT_WIDE(#x))
+#define VALIDATEE(x) VALIDATE(x, _T("Error: ") _CRT_WIDE(#x))
 
 #endif //PCH_H

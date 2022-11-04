@@ -8,6 +8,31 @@ const LPCTSTR g_lpstrClass = _T("DESKTOPSMENU");
 
 #define WM_TRAY								(WM_USER + 0x0200)
 
+HMENU LoadPopupMenu(HINSTANCE hInstance, DWORD id)
+{
+	const HMENU hMenu = LoadMenu(hInstance, MAKEINTRESOURCE(id));
+	const HMENU hPopupMenu = GetSubMenu(hMenu, 0);
+	VALIDATEE(RemoveMenu(hMenu, 0, MF_BYPOSITION));
+	VALIDATEE(DestroyMenu(hMenu));
+	return hPopupMenu;
+}
+
+UINT MenuFindByCommand(HMENU hMenu, UINT id)
+{
+	for (int nPos = 0; nPos < GetMenuItemCount(hMenu); ++nPos)
+	{
+		if (GetMenuItemID(hMenu, nPos) == id)
+			return nPos;
+	}
+	return -1;
+}
+
+enum
+{
+	HK_PIN,
+	HK_SWITCH,
+};
+
 struct HookDeleter
 {
 	typedef HHOOK pointer;
@@ -36,19 +61,22 @@ INT_PTR AboutDlg(const HWND hDlg, const UINT uMsg, const WPARAM wParam, const LP
 		if (Size > 0)
 		{
 			void* Info = malloc(Size);
+			if (Info != nullptr)
+			{
+				// VS_VERSION_INFO   VS_VERSIONINFO  VS_FIXEDFILEINFO
 
-			// VS_VERSION_INFO   VS_VERSIONINFO  VS_FIXEDFILEINFO
+				//Dummy = 0;
+				GetFileVersionInfo(FileName, Dummy, Size, Info);
 
-			GetFileVersionInfo(FileName, Dummy, Size, Info);
+				TCHAR* String;
+				UINT	Length;
+				VerQueryValue(Info, TEXT("\\StringFileInfo\\0c0904b0\\FileVersion"), (LPVOID*) &String, &Length);
+				SetWindowText(GetDlgItem(hDlg, IDC_ABOUT_VERSION), String);
+				VerQueryValue(Info, TEXT("\\StringFileInfo\\0c0904b0\\ProductName"), (LPVOID*) &String, &Length);
+				SetWindowText(GetDlgItem(hDlg, IDC_ABOUT_PRODUCT), String);
 
-			TCHAR* String;
-			UINT	Length;
-			VerQueryValue(Info, TEXT("\\StringFileInfo\\0c0904b0\\FileVersion"), (LPVOID*) &String, &Length);
-			SetWindowText(GetDlgItem(hDlg, IDC_ABOUT_VERSION), String);
-			VerQueryValue(Info, TEXT("\\StringFileInfo\\0c0904b0\\ProductName"), (LPVOID*) &String, &Length);
-			SetWindowText(GetDlgItem(hDlg, IDC_ABOUT_PRODUCT), String);
-
-			free(Info);
+				free(Info);
+			}
 		}
 		else
 		{
@@ -113,7 +141,8 @@ LRESULT CALLBACK WndProc(const HWND hWnd, const UINT uMsg, const WPARAM wParam, 
 		LPCREATESTRUCT cs = (LPCREATESTRUCT) lParam;
 		SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR) cs->lpCreateParams);
 
-		VALIDATEE(RegisterHotKey(hWnd, 0, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, _T('P')));
+		VALIDATEE(RegisterHotKey(hWnd, HK_PIN, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, _T('P')));
+		VALIDATEE(RegisterHotKey(hWnd, HK_SWITCH, MOD_CONTROL | MOD_SHIFT | MOD_NOREPEAT, _T('D')));
 
 		NOTIFYICONDATA nid = {};
 		nid.cbSize = sizeof(nid);
@@ -139,7 +168,8 @@ LRESULT CALLBACK WndProc(const HWND hWnd, const UINT uMsg, const WPARAM wParam, 
 		nid.uCallbackMessage = WM_TRAY;
 		VALIDATEE(Shell_NotifyIcon(NIM_DELETE, &nid));
 
-		VALIDATEE(UnregisterHotKey(hWnd, 0));
+		VALIDATEE(UnregisterHotKey(hWnd, HK_PIN));
+		VALIDATEE(UnregisterHotKey(hWnd, HK_SWITCH));
 
 		return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
@@ -161,18 +191,11 @@ LRESULT CALLBACK WndProc(const HWND hWnd, const UINT uMsg, const WPARAM wParam, 
 			case SC_PIN: return OnDesktopPin(ws, hWndSrc, ms->msg);
 			case SC_MOVE_PREV: return OnDesktopMove(ws, hWndSrc, ms->msg, GetDesktop(ws, LeftDirection));
 			case SC_MOVE_NEXT: return OnDesktopMove(ws, hWndSrc, ms->msg, GetDesktop(ws, RightDirection));
-			case SC_MOVE_DESKTOP + 0x00:
-			case SC_MOVE_DESKTOP + 0x10:
-			case SC_MOVE_DESKTOP + 0x20:
-			case SC_MOVE_DESKTOP + 0x30:
-			case SC_MOVE_DESKTOP + 0x40:
-			case SC_MOVE_DESKTOP + 0x50:
-			case SC_MOVE_DESKTOP + 0x60:
-			case SC_MOVE_DESKTOP + 0x70:
-			case SC_MOVE_DESKTOP + 0x80:
-			case SC_MOVE_DESKTOP + 0x90:
-				return OnDesktopMove(ws, hWndSrc, ms->msg, GetDesktop(ws, (ms->type - SC_MOVE_DESKTOP) >> 4));
-			default: return FALSE;
+			default:
+				if (ms->type >= SC_MOVE_DESKTOP && ms->type < (SC_MOVE_DESKTOP + 100))
+					return OnDesktopMove(ws, hWndSrc, ms->msg, GetDesktop(ws, (ms->type - SC_MOVE_DESKTOP) >> 4));
+				else
+					return TRUE;
 			}
 		}
 		else
@@ -190,7 +213,7 @@ LRESULT CALLBACK WndProc(const HWND hWnd, const UINT uMsg, const WPARAM wParam, 
 	}
 
 	case WM_COMMAND:
-		switch (wParam)
+		switch (LOWORD(wParam))
 		{
 		case ID_MAIN_ABOUT:
 			DialogBox(g_hDllInstance, MAKEINTRESOURCE(IDD_ABOUT), hWnd, AboutDlg);
@@ -200,21 +223,72 @@ LRESULT CALLBACK WndProc(const HWND hWnd, const UINT uMsg, const WPARAM wParam, 
 			PostMessage(hWnd, WM_CLOSE, 0, 0);
 			return FALSE;
 
+		case ID_SWITCH_PREVIOUS:
+		{
+			const DesktopData* ws = (DesktopData*) GetWindowLongPtr(hWnd, GWLP_USERDATA);
+			VALIDATEE(OnDesktopSwitch(ws, GetDesktop(ws, LeftDirection)));
+			return FALSE;
+		}
+
+		case ID_SWITCH_NEXT:
+		{
+			const DesktopData* ws = (DesktopData*) GetWindowLongPtr(hWnd, GWLP_USERDATA);
+			VALIDATEE(OnDesktopSwitch(ws, GetDesktop(ws, RightDirection)));
+			return FALSE;
+		}
+
 		default:
-			return TRUE;
+			if (LOWORD(wParam) >= ID_SWITCH_DESKTOPS && LOWORD(wParam) < (ID_SWITCH_DESKTOPS + 100))
+			{
+				const DesktopData* ws = (DesktopData*) GetWindowLongPtr(hWnd, GWLP_USERDATA);
+				VALIDATEE(OnDesktopSwitch(ws, GetDesktop(ws, (LOWORD(wParam) - ID_SWITCH_DESKTOPS) >> 4)));
+				return FALSE;
+			}
+			else
+				return TRUE;
 		}
 
 	case WM_HOTKEY:
 		switch (wParam)
 		{
-		case 0:
+		case HK_PIN:
 		{
 			HWND hWndFG = GetForegroundWindow();
 			const DesktopData* ws = (DesktopData*) GetWindowLongPtr(hWnd, GWLP_USERDATA);
 			OnDesktopPin(ws, hWndFG, Message::Select);
 			return TRUE;
 		}
+		case HK_SWITCH:
+		{
+			const DesktopData* ws = (DesktopData*) GetWindowLongPtr(hWnd, GWLP_USERDATA);
 
+			const HMENU hMenuSwitch = LoadPopupMenu(g_hDllInstance, IDR_SWITCH);
+			UINT pos = MenuFindByCommand(hMenuSwitch, ID_SWITCH_DESKTOPS);
+			VALIDATE(pos >= 0, _T("MenuFindByCommand not found"));
+			DeleteMenu(hMenuSwitch, pos, MF_BYPOSITION);
+
+			UINT dn = 0;
+			const std::vector<std::wstring> names = GetDesktopNames(ws);
+			for (const std::wstring& n : names)
+			{
+				InsertMenu(hMenuSwitch, pos, MF_STRING, ID_SWITCH_DESKTOPS + ((UINT_PTR) dn << 4), n.c_str());
+				++pos;
+				++dn;
+			}
+
+			const HWND hWndFG = GetForegroundWindow();
+			HMONITOR hMonitor = MonitorFromWindow(hWndFG, MONITOR_DEFAULTTONEAREST);
+			MONITORINFO mi = { sizeof(MONITORINFO) };
+			VALIDATEE(GetMonitorInfo(hMonitor, &mi));
+
+			VALIDATEE(SetForegroundWindow(hWnd));
+			POINT pt = { (mi.rcWork.left + mi.rcWork.right) / 2, (mi.rcWork.top + mi.rcWork.bottom) / 2 };
+			VALIDATEE(TrackPopupMenu(hMenuSwitch, TPM_CENTERALIGN | TPM_VCENTERALIGN, pt.x, pt.y, 0, hWnd, nullptr));
+
+			DestroyMenu(hMenuSwitch);
+
+			return TRUE;
+		}
 		default:
 			return FALSE;
 		}
@@ -225,9 +299,9 @@ LRESULT CALLBACK WndProc(const HWND hWnd, const UINT uMsg, const WPARAM wParam, 
 			VALIDATEE(SetForegroundWindow(hWnd));
 			POINT pt;
 			VALIDATEE(GetCursorPos(&pt));
-			const HMENU hMenuBar = LoadMenu(g_hDllInstance, MAKEINTRESOURCE(IDR_MAIN));
-			const HMENU hMenu = GetSubMenu(hMenuBar, 0);
+			const HMENU hMenu = LoadPopupMenu(g_hDllInstance, IDR_MAIN);
 			VALIDATEE(TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_TOPALIGN, pt.x, pt.y, 0, hWnd, nullptr));
+			DestroyMenu(hMenu);
 		}
 		return TRUE;
 
@@ -294,6 +368,7 @@ void CALLBACK DesktopsMenu(const HWND hParentWnd, const HINSTANCE hInstance, con
 	cs.lpszClass = wc.lpszClassName;
 	cs.lpszName = g_lpstrTitle;
 	cs.style = WS_OVERLAPPEDWINDOW;
+	cs.dwExStyle = WS_EX_TOPMOST;
 	cs.x = CW_USEDEFAULT;
 	cs.x = CW_USEDEFAULT;
 	cs.cx = CW_USEDEFAULT;
