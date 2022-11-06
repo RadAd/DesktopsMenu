@@ -3,9 +3,13 @@
 #include "resource.h"
 #include "DesktopData.h"
 
-const LPCTSTR g_lpstrTitle = _T("Desktops Menu");
-const LPCTSTR g_lpstrClass = _T("DESKTOPSMENU");
-
+#ifdef _WIN64
+const LPCTSTR g_lpstrTitle = _T("Desktops Menu (x64)");
+const LPCTSTR g_lpstrClass = _T("DESKTOPSMENU64");
+#else
+const LPCTSTR g_lpstrTitle = _T("Desktops Menu (x86)");
+const LPCTSTR g_lpstrClass = _T("DESKTOPSMENU32");
+#endif
 #define WM_TRAY								(WM_USER + 0x0200)
 
 HMENU LoadPopupMenu(HINSTANCE hInstance, DWORD id)

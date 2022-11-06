@@ -20,6 +20,6 @@ msbuild DesktopsMenu.vcxproj -p:Configuration=Release -p:Platform=x64
 Run
 =======
 ```bat
-rundll32.exe Bin\Win32Release\DesktopsMenu.dll,DesktopsMenu
-rundll32.exe Bin\x64Release\DesktopsMenu.dll,DesktopsMenu
+rundll32.exe Bin\Release\DesktopsMenuWin32.dll,DesktopsMenu
+rundll32.exe Bin\Release\DesktopsMenux64.dll,DesktopsMenu
 ```
