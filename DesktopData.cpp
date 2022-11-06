@@ -13,11 +13,11 @@ void Init(DesktopData& ws)
     CHECK_HR(pServiceProvider->QueryService(__uuidof(IApplicationViewCollection), &ws.pApplicationViewCollection));
 }
 
-CComPtr<IVirtualDesktop> GetDesktop(const DesktopData* ws, AdjacentDesktop uDirection)
+CComPtr<Win10::IVirtualDesktop> GetDesktop(const DesktopData* ws, AdjacentDesktop uDirection)
 {
-    CComPtr<IVirtualDesktop> pDesktop;
+    CComPtr<Win10::IVirtualDesktop> pDesktop;
 
-    CComPtr<IVirtualDesktop> pCurrentDesktop;
+    CComPtr<Win10::IVirtualDesktop> pCurrentDesktop;
     CHECK_HR_RET(ws->pVirtualDesktopManagerInternal->GetCurrentDesktop(&pCurrentDesktop), pDesktop);
 
     if (FAILED(ws->pVirtualDesktopManagerInternal->GetAdjacentDesktop(pCurrentDesktop, uDirection, &pDesktop)))
@@ -26,9 +26,9 @@ CComPtr<IVirtualDesktop> GetDesktop(const DesktopData* ws, AdjacentDesktop uDire
     return pDesktop;
 }
 
-CComPtr<IVirtualDesktop> GetDesktop(const DesktopData* ws, int dn)
+CComPtr<Win10::IVirtualDesktop> GetDesktop(const DesktopData* ws, int dn)
 {
-    CComPtr<IVirtualDesktop> pDesktop;
+    CComPtr<Win10::IVirtualDesktop> pDesktop;
 
     CComPtr<IObjectArray> pDesktopArray;
     if (ws->pVirtualDesktopManagerInternal && SUCCEEDED(ws->pVirtualDesktopManagerInternal->GetDesktops(&pDesktopArray)))
@@ -86,7 +86,7 @@ LRESULT OnDesktopPin(const DesktopData* ws, const HWND hWndSrc, const Message ms
     }
 }
 
-LRESULT OnDesktopMove(const DesktopData* ws, const HWND hWndSrc, const Message msg, CComPtr<IVirtualDesktop> pDesktop)
+LRESULT OnDesktopMove(const DesktopData* ws, const HWND hWndSrc, const Message msg, CComPtr<Win10::IVirtualDesktop> pDesktop)
 {
     const LRESULT ret = msg == Message::Query ? MF_DISABLED : FALSE;
     try
@@ -108,7 +108,7 @@ LRESULT OnDesktopMove(const DesktopData* ws, const HWND hWndSrc, const Message m
                 if (!pDesktop)
                     return MF_DISABLED;
 
-                CComPtr<IVirtualDesktop> pCurrentDesktop;
+                CComPtr<Win10::IVirtualDesktop> pCurrentDesktop;
                 CHECK_HR_RET(ws->pVirtualDesktopManagerInternal->GetCurrentDesktop(&pCurrentDesktop), ret);
 
                 if (pCurrentDesktop == pDesktop)
@@ -139,7 +139,7 @@ LRESULT OnDesktopMove(const DesktopData* ws, const HWND hWndSrc, const Message m
     }
 }
 
-BOOL OnDesktopSwitch(const DesktopData* ws, CComPtr<IVirtualDesktop> pDesktop)
+BOOL OnDesktopSwitch(const DesktopData* ws, CComPtr<Win10::IVirtualDesktop> pDesktop)
 {
     const BOOL ret = FALSE;
     try
@@ -166,7 +166,7 @@ int GetDesktopNames(const DesktopData* ws, LPTSTR text, const int size)
     if (ws->pVirtualDesktopManagerInternal && SUCCEEDED(ws->pVirtualDesktopManagerInternal->GetDesktops(&pDesktopArray)))
     {
         int dn = 0;
-        for (CComPtr<IVirtualDesktop2> pDesktop : ObjectArrayRange<IVirtualDesktop2>(pDesktopArray))
+        for (CComPtr<Win10::IVirtualDesktop2> pDesktop : ObjectArrayRange<Win10::IVirtualDesktop2>(pDesktopArray))
         {
             ++dn;
 
@@ -198,7 +198,7 @@ std::vector<std::wstring> GetDesktopNames(const DesktopData* ws)
     if (ws->pVirtualDesktopManagerInternal && SUCCEEDED(ws->pVirtualDesktopManagerInternal->GetDesktops(&pDesktopArray)))
     {
         int dn = 0;
-        for (CComPtr<IVirtualDesktop2> pDesktop : ObjectArrayRange<IVirtualDesktop2>(pDesktopArray))
+        for (CComPtr<Win10::IVirtualDesktop2> pDesktop : ObjectArrayRange<Win10::IVirtualDesktop2>(pDesktopArray))
         {
             ++dn;
 
