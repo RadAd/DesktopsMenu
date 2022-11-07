@@ -1,4 +1,4 @@
-LIBRARY   DesktopsMenu
+LIBRARY   DesktopsMenuWin32
 EXPORTS
    DesktopsMenuA   @1
    DesktopsMenuW   @2

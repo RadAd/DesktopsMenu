@@ -327,10 +327,13 @@ struct CoInit
     }
 };
 
+extern "C"
+{
+
 #ifdef _UNICODE
 #define DesktopsMenu DesktopsMenuW
 
-void CALLBACK DesktopsMenuA(const HWND hParentWnd, const HINSTANCE hInstance, const LPCSTR lpszCmdLine, const int nCmdShow)
+void __declspec(dllexport) CALLBACK DesktopsMenuA(const HWND hParentWnd, const HINSTANCE hInstance, const LPCSTR lpszCmdLine, const int nCmdShow)
 {
     MessageBox(hParentWnd, _T("TODO translate"), g_lpstrTitle, MB_ICONWARNING | MB_OK);
 }
@@ -338,13 +341,13 @@ void CALLBACK DesktopsMenuA(const HWND hParentWnd, const HINSTANCE hInstance, co
 #else
 #define DesktopsMenu DesktopsMenuA
 
-void CALLBACK DesktopsMenuW(const HWND hParentWnd, const HINSTANCE hInstance, const LPCWSTR lpszCmdLine, const int nCmdShow)
+void __declspec(dllexport) CALLBACK DesktopsMenuW(const HWND hParentWnd, const HINSTANCE hInstance, const LPCWSTR lpszCmdLine, const int nCmdShow)
 {
     MessageBox(hParentWnd, _T("TODO translate"), lpstrTitle, MB_ICONWARNING | MB_OK);
 }
 #endif
 
-void CALLBACK DesktopsMenu(const HWND hParentWnd, const HINSTANCE hInstance, const LPCTSTR lpszCmdLine, const int nCmdShow)
+void __declspec(dllexport) CALLBACK DesktopsMenu(const HWND hParentWnd, const HINSTANCE hInstance, const LPCTSTR lpszCmdLine, const int nCmdShow)
 {
     g_hMsgWnd = hParentWnd;
 
@@ -391,4 +394,6 @@ void CALLBACK DesktopsMenu(const HWND hParentWnd, const HINSTANCE hInstance, con
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
+}
+
 }
