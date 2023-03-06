@@ -111,7 +111,7 @@ LRESULT OnDesktopMove(const DesktopData* ws, const HWND hWndSrc, const Message m
                 CComPtr<Win10::IVirtualDesktop> pCurrentDesktop;
                 CHECK_HR_RET(ws->pVirtualDesktopManagerInternal->GetCurrentDesktop(&pCurrentDesktop), ret);
 
-                if (pCurrentDesktop == pDesktop)
+                if (pCurrentDesktop.IsEqualObject(pDesktop))
                     return MF_ENABLED | MF_CHECKED;
                 else
                     return MF_ENABLED;
@@ -191,9 +191,11 @@ int GetDesktopNames(const DesktopData* ws, LPTSTR text, const int size)
     return (int) wcslen(text);
 }
 
-std::vector<std::wstring> GetDesktopNames(const DesktopData* ws)
+std::vector<std::wstring> GetDesktopNames(const DesktopData* ws, int* current)
 {
     std::vector<std::wstring> names;
+    CComPtr<Win10::IVirtualDesktop> pCurrentDesktop;
+    ws->pVirtualDesktopManagerInternal->GetCurrentDesktop(&pCurrentDesktop);
     CComPtr<IObjectArray> pDesktopArray;
     if (ws->pVirtualDesktopManagerInternal && SUCCEEDED(ws->pVirtualDesktopManagerInternal->GetDesktops(&pDesktopArray)))
     {
@@ -201,6 +203,9 @@ std::vector<std::wstring> GetDesktopNames(const DesktopData* ws)
         for (CComPtr<Win10::IVirtualDesktop2> pDesktop : ObjectArrayRange<Win10::IVirtualDesktop2>(pDesktopArray))
         {
             ++dn;
+
+            if (pCurrentDesktop.IsEqualObject(pDesktop))
+                *current = dn;
 
             HSTRING s = NULL;
             CHECK_HR_RET(pDesktop->GetName(&s), std::vector<std::wstring>());

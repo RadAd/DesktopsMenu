@@ -19,4 +19,4 @@ LRESULT OnDesktopPin(const DesktopData* ws, const HWND hWndSrc, const Message ms
 LRESULT OnDesktopMove(const DesktopData* ws, const HWND hWndSrc, const Message msg, CComPtr<Win10::IVirtualDesktop> pDesktop);
 BOOL OnDesktopSwitch(const DesktopData* ws, CComPtr<Win10::IVirtualDesktop> pDesktop);
 int GetDesktopNames(const DesktopData* ws, LPTSTR text, const int size);
-std::vector<std::wstring> GetDesktopNames(const DesktopData* ws);
+std::vector<std::wstring> GetDesktopNames(const DesktopData* ws, int* current);

@@ -283,8 +283,10 @@ LRESULT CALLBACK WndProc(const HWND hWnd, const UINT uMsg, const WPARAM wParam, 
             const DesktopData* ws = (DesktopData*) GetWindowLongPtr(hWnd, GWLP_USERDATA);
 
             const HMENU hMenuSwitch = LoadPopupMenu(g_hDllInstance, IDR_SWITCH);
-            InsertDesktopMenu(hMenuSwitch, ID_SWITCH_DESKTOPS, GetDesktopNames(ws));
-            // TODO Radio check current desktop
+            int radio = -1;
+            InsertDesktopMenu(hMenuSwitch, ID_SWITCH_DESKTOPS, GetDesktopNames(ws, &radio));
+            if (radio != (UINT) -1)
+                CheckMenuRadioItem(hMenuSwitch, ID_SWITCH_DESKTOPS, ID_SWITCH_DESKTOPS + ((UINT_PTR) 100 << 4), ID_SWITCH_DESKTOPS + ((UINT_PTR) radio << 4), MF_BYCOMMAND);
 
             const HWND hWndFG = GetForegroundWindow();
             HMONITOR hMonitor = MonitorFromWindow(hWndFG, MONITOR_DEFAULTTONEAREST);
