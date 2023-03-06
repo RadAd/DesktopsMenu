@@ -19,11 +19,6 @@ extern const LPCTSTR g_lpstrClass;
 
 #define CD_DESKTOPS							0x0100
 
-#define SC_PIN								0xF200
-#define SC_MOVE_PREV						0xF210
-#define SC_MOVE_NEXT						0xF220
-#define SC_MOVE_DESKTOP						0xF300
-
 enum class Message
 {
     Query,

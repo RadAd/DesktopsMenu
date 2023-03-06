@@ -80,6 +80,21 @@ BEGIN
     END
 END
 
+IDR_SYSTEM MENU
+BEGIN
+    POPUP "System"
+    BEGIN
+        MENUITEM "&Pin to All Desktops",        SC_PIN
+        POPUP "Move to &Desktop"
+        BEGIN
+            MENUITEM "&Previous",                   SC_MOVE_PREV
+            MENUITEM "&Next",                       SC_MOVE_NEXT
+            MENUITEM SEPARATOR
+            MENUITEM "Desktops",                    SC_MOVE_DESKTOP
+        END
+    END
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //

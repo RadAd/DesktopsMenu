@@ -1,8 +1,32 @@
 #include "pch.h"
 #include "Hooks.h"
+#include "resource.h"
+#include <shlobj_core.h>
+#include <vector>
+#include <string>
 
 HMENU LoadPopupMenu(HINSTANCE hInstance, DWORD id);
 UINT MenuFindByCommand(HMENU hMenu, UINT id);
+void InsertDesktopMenu(const HMENU hMenuSwitch, const UINT id, const std::vector<std::wstring>& names);
+
+std::vector<std::wstring> GetDesktopNames(const HWND hDesktopsWnd)
+{
+    std::vector<std::wstring> dtnames;
+
+    TCHAR names[1024] = _T("");
+    //GetWindowText(hDesktopsWnd, names, ARRAYSIZE(names));
+    SendMessage(hDesktopsWnd, WM_GETTEXT, ARRAYSIZE(names), (LPARAM) names);
+    TCHAR* n = names;
+    while (TCHAR* e = wcschr(n, _T('|')))
+    {
+        *e = _T('\0');
+        dtnames.emplace_back(n);
+        n = e + 1;
+    }
+    dtnames.emplace_back(n);
+
+    return dtnames;
+}
 
 LRESULT SendDesktopMessage(const HWND hDesktopsWnd, const HWND hWnd, const UINT type, const Message msg)
 {
@@ -25,31 +49,12 @@ void HookProc(const HWND hWnd, const UINT message, const WPARAM wParam, const LP
 
             if (MenuFindByCommand(hMenuSystem, SC_PIN) == -1)
             {
-                // TODO Shell_MergeMenus shlobj_core.h
-                InsertMenu(hMenuSystem, SC_CLOSE, MF_BYCOMMAND | MF_STRING, SC_PIN, _T("Pin to All Desktops"));
+                const HMENU hMenuDesktop = LoadPopupMenu(g_hDllInstance, IDR_SYSTEM);
+                InsertDesktopMenu(GetSubMenu(hMenuDesktop, 1), SC_MOVE_DESKTOP, GetDesktopNames(hDesktopsWnd));
 
-                const HMENU hMenuMove = CreateMenu();
-                AppendMenu(hMenuMove, MF_STRING, SC_MOVE_PREV, _T("Previous"));
-                AppendMenu(hMenuMove, MF_STRING, SC_MOVE_NEXT, _T("Next"));
+                Shell_MergeMenus(hMenuSystem, hMenuDesktop, MenuFindByCommand(hMenuSystem, SC_CLOSE), 0, 0xFFFF, MM_ADDSEPARATOR);
 
-                AppendMenu(hMenuMove, MF_SEPARATOR, 0, nullptr);
-                UINT dn = 0;
-                TCHAR names[1024] = _T("");
-                //GetWindowText(hDesktopsWnd, names, ARRAYSIZE(names));
-                SendMessage(hDesktopsWnd, WM_GETTEXT, ARRAYSIZE(names), (LPARAM) names);
-                TCHAR* n = names;
-                while (TCHAR* e = wcschr(n, _T('|')))
-                {
-                    *e = _T('\0');
-                    AppendMenu(hMenuMove, MF_STRING, SC_MOVE_DESKTOP + ((UINT_PTR) dn << 4), n);
-                    n = e + 1;
-                    ++dn;
-                }
-                AppendMenu(hMenuMove, MF_STRING, SC_MOVE_DESKTOP + ((UINT_PTR) dn << 4), n);
-
-                InsertMenu(hMenuSystem, SC_CLOSE, MF_BYCOMMAND | MF_POPUP, (UINT_PTR) hMenuMove, _T("Move to Desktop"));
-
-                InsertMenu(hMenuSystem, SC_CLOSE, MF_BYCOMMAND | MF_SEPARATOR, 0, nullptr);
+                DestroyMenu(hMenuDesktop);
             }
 
             for (UINT type : { SC_PIN, SC_MOVE_PREV, SC_MOVE_NEXT })

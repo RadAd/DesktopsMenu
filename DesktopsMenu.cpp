@@ -31,6 +31,22 @@ UINT MenuFindByCommand(HMENU hMenu, UINT id)
     return -1;
 }
 
+void InsertDesktopMenu(const HMENU hMenuSwitch, const UINT id, const std::vector<std::wstring>& names)
+{
+    const UINT pos = MenuFindByCommand(hMenuSwitch, id);
+    VALIDATE(pos >= 0, _T("MenuFindByCommand not found"));
+    DeleteMenu(hMenuSwitch, pos, MF_BYPOSITION);
+
+    UINT dn = 0;
+    for (const std::wstring& n : names)
+    {
+        TCHAR buf[1024];
+        wsprintf(buf, L"&%d. %s", (dn + 1), n.c_str());
+        InsertMenu(hMenuSwitch, pos + dn, MF_STRING, id + ((UINT_PTR) dn << 4), buf);
+        ++dn;
+    }
+}
+
 enum
 {
     HK_PIN,
@@ -267,18 +283,8 @@ LRESULT CALLBACK WndProc(const HWND hWnd, const UINT uMsg, const WPARAM wParam, 
             const DesktopData* ws = (DesktopData*) GetWindowLongPtr(hWnd, GWLP_USERDATA);
 
             const HMENU hMenuSwitch = LoadPopupMenu(g_hDllInstance, IDR_SWITCH);
-            UINT pos = MenuFindByCommand(hMenuSwitch, ID_SWITCH_DESKTOPS);
-            VALIDATE(pos >= 0, _T("MenuFindByCommand not found"));
-            DeleteMenu(hMenuSwitch, pos, MF_BYPOSITION);
-
-            UINT dn = 0;
-            const std::vector<std::wstring> names = GetDesktopNames(ws);
-            for (const std::wstring& n : names)
-            {
-                InsertMenu(hMenuSwitch, pos, MF_STRING, ID_SWITCH_DESKTOPS + ((UINT_PTR) dn << 4), n.c_str());
-                ++pos;
-                ++dn;
-            }
+            InsertDesktopMenu(hMenuSwitch, ID_SWITCH_DESKTOPS, GetDesktopNames(ws));
+            // TODO Radio check current desktop
 
             const HWND hWndFG = GetForegroundWindow();
             HMONITOR hMonitor = MonitorFromWindow(hWndFG, MONITOR_DEFAULTTONEAREST);
