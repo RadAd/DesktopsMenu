@@ -132,8 +132,8 @@ namespace Win10 {
     {
     public:
         virtual HRESULT STDMETHODCALLTYPE IsViewVisible(
-        _In_ IApplicationView* pView,
-        _Out_ BOOL* pfVisible) = 0;
+            _In_ IApplicationView* pView,
+          _Out_ BOOL* pfVisible) = 0;
 
         virtual HRESULT STDMETHODCALLTYPE GetID(
             _Out_ GUID* pGuid) = 0;
@@ -144,7 +144,7 @@ namespace Win10 {
     {
     public:
         virtual HRESULT STDMETHODCALLTYPE GetName(
-        _Out_ HSTRING* pStr) = 0;
+            _Out_ HSTRING* pStr) = 0;
     };
 
 }
