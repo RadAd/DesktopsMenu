@@ -286,7 +286,7 @@ LRESULT CALLBACK WndProc(const HWND hWnd, const UINT uMsg, const WPARAM wParam, 
             int radio = -1;
             InsertDesktopMenu(hMenuSwitch, ID_SWITCH_DESKTOPS, GetDesktopNames(ws, &radio));
             if (radio != (UINT) -1)
-                CheckMenuRadioItem(hMenuSwitch, ID_SWITCH_DESKTOPS, ID_SWITCH_DESKTOPS + ((UINT_PTR) 100 << 4), ID_SWITCH_DESKTOPS + ((UINT_PTR) radio << 4), MF_BYCOMMAND);
+                CheckMenuRadioItem(hMenuSwitch, ID_SWITCH_DESKTOPS, ID_SWITCH_DESKTOPS + ((UINT_PTR) 100 << 4), ID_SWITCH_DESKTOPS + ((UINT_PTR) (radio - 1) << 4), MF_BYCOMMAND);
 
             const HWND hWndFG = GetForegroundWindow();
             HMONITOR hMonitor = MonitorFromWindow(hWndFG, MONITOR_DEFAULTTONEAREST);
